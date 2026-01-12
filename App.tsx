@@ -41,9 +41,8 @@ const App: React.FC = () => {
   });
 
   const [config, setConfig] = useState({
-    franquia: 51000,
-    valorFranquia: 2610.00,
-    valorExtra: 0.05
+    franquia: 52200,
+    valorCopia: 0.05
   });
 
   const [modalMode, setModalMode] = useState<'add' | 'close_month' | null>(null);
@@ -159,8 +158,10 @@ const App: React.FC = () => {
   const totals = useMemo(() => {
     const totalCopias = printers.reduce((acc, p) => acc + Math.max(0, (p.currentCounter || 0) - p.lastMonthCounter), 0);
     const excedente = Math.max(0, totalCopias - config.franquia);
-    const totalPagar = config.valorFranquia + (excedente * config.valorExtra);
-    return { totalCopias, excedente, totalPagar };
+    const valorFranquia = config.franquia * config.valorCopia;
+    const valorExcedente = excedente * config.valorCopia;
+    const totalPagar = valorFranquia + valorExcedente;
+    return { totalCopias, excedente, totalPagar, valorFranquia, valorExcedente };
   }, [printers, config]);
 
   const closeMonth = () => {
@@ -278,7 +279,7 @@ const App: React.FC = () => {
               <div className="text-3xl font-black">R$ {dataTotals.totalPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
             </div>
           </div>
-          <footer className="grid grid-cols-2 gap-10 items-end border-t pt-4">
+          <footer className="grid grid-cols-2 gap-10 items-end pt-4">
             <p className="text-[7px] text-slate-400 uppercase font-bold">Gerado em: {new Date().toLocaleString('pt-BR')}</p>
             <div className="text-center border-t border-slate-900 pt-1 font-black uppercase text-[8px]">Assinatura Gestor</div>
           </footer>
@@ -296,8 +297,8 @@ const App: React.FC = () => {
         <div className="flex items-center gap-6">
           <AGLLogo size="small" />
           <div className="hidden sm:block border-l pl-6">
-            <h1 className="text-lg font-extrabold text-slate-900">Gestão Windows <span className="text-blue-600">AGL</span></h1>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Persistência Local Ativada</p>
+            <h1 className="text-lg font-extrabold text-slate-900">Gestão TI <span className="text-blue-600">AGL</span></h1>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Contador Mensal de Impressões</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -331,12 +332,8 @@ const App: React.FC = () => {
                 <input type="number" className="text-2xl font-black w-full outline-none text-slate-900 bg-transparent text-center" value={config.franquia} onChange={e => setConfig({ ...config, franquia: Number(e.target.value) })} />
               </div>
               <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm text-center flex flex-col justify-center">
-                <p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Valor Base (R$)</p>
-                <input type="number" className="text-2xl font-black w-full outline-none text-slate-900 bg-transparent text-center" value={config.valorFranquia} onChange={e => setConfig({ ...config, valorFranquia: Number(e.target.value) })} />
-                <div className="mt-3 pt-3 border-t border-slate-100">
-                  <p className="text-[9px] font-bold text-slate-300 uppercase mb-1">Valor Excedente (R$)</p>
-                  <input type="number" step="0.01" className="text-sm font-bold w-full outline-none text-slate-500 bg-transparent text-center" value={config.valorExtra} onChange={e => setConfig({ ...config, valorExtra: Number(e.target.value) })} />
-                </div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Valor da Cópia (R$)</p>
+                <input type="number" step="0.01" className="text-2xl font-black w-full outline-none text-slate-900 bg-transparent text-center" value={config.valorCopia} onChange={e => setConfig({ ...config, valorCopia: Number(e.target.value) })} />
               </div>
               <div className="bg-blue-600 p-6 rounded-3xl shadow-xl text-white text-center flex flex-col justify-center">
                 <p className="text-[11px] font-bold text-blue-100 uppercase mb-1">Volume Total</p>
