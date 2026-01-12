@@ -274,9 +274,22 @@ const App: React.FC = () => {
                 <div className="flex justify-between text-[10px] border-t pt-1 mt-1"><span className="font-black uppercase text-[8px]">Excedente</span><span className="font-black text-red-600">{dataTotals.excedente.toLocaleString()}</span></div>
               </div>
             </div>
-            <div className="bg-blue-600 rounded-xl p-4 text-white flex flex-col justify-center items-end">
-              <p className="text-[8px] font-black uppercase opacity-80">Total a Faturar</p>
-              <div className="text-3xl font-black">R$ {dataTotals.totalPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            <div className="bg-blue-600 rounded-xl p-4 text-white">
+              <p className="text-[8px] font-black uppercase opacity-80 mb-2">Total a Faturar</p>
+              <div className="space-y-1 mb-2">
+                <div className="flex justify-between text-[10px] font-bold">
+                  <span>Valor Mínimo</span>
+                  <span>R$ {dataTotals.valorFranquia.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-bold">
+                  <span>Valor Excedente</span>
+                  <span>R$ {dataTotals.valorExcedente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center border-t border-white/20 pt-2">
+                <span className="text-[10px] font-black uppercase">Total</span>
+                <div className="text-2xl font-black">R$ {dataTotals.totalPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+              </div>
             </div>
           </div>
           <footer className="grid grid-cols-2 gap-10 items-end pt-4">
