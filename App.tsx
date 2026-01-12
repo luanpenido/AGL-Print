@@ -14,7 +14,8 @@ import {
   Save,
   Calendar,
   Eye,
-  FolderOpen
+  FolderOpen,
+  Edit
 } from 'lucide-react';
 
 // Detecta se está rodando dentro do Electron (Windows App)
@@ -49,6 +50,7 @@ const App: React.FC = () => {
   const [showReport, setShowReport] = useState(false);
   const [viewingHistoryRecord, setViewingHistoryRecord] = useState<HistoryRecord | null>(null);
   const [printerToDelete, setPrinterToDelete] = useState<string | null>(null);
+  const [printerToEdit, setPrinterToEdit] = useState<Printer | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [activeTab, setActiveTab] = useState<'current' | 'history'>('current');
 
@@ -372,7 +374,10 @@ const App: React.FC = () => {
                         {Math.max(0, (p.currentCounter || 0) - p.lastMonthCounter).toLocaleString()}
                       </td>
                       <td className="px-8 py-5 text-center">
-                        <button onClick={() => promptDelete(p.id)} className="p-2 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => setPrinterToEdit(p)} className="p-2 hover:bg-blue-50 text-slate-300 hover:text-blue-500 rounded-lg transition-colors"><Edit size={16} /></button>
+                          <button onClick={() => promptDelete(p.id)} className="p-2 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -456,6 +461,51 @@ const App: React.FC = () => {
             <div className="flex gap-4">
               <button onClick={() => setModalMode(null)} className="flex-1 py-4 bg-slate-100 rounded-2xl font-black uppercase text-xs tracking-widest transition-colors hover:bg-slate-200">Ainda não</button>
               <button onClick={closeMonth} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-emerald-500/20 transition-all hover:bg-emerald-700 active:scale-95">Confirmar Fechamento</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {printerToEdit && (
+        <div className="fixed inset-0 z-[70] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] p-10 w-full max-w-sm shadow-2xl">
+            <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase mb-8">Editar Equipamento</h2>
+            <div className="space-y-5">
+              <input
+                placeholder="Nome"
+                className="w-full bg-slate-50 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
+                value={printerToEdit.name}
+                onChange={e => setPrinterToEdit({ ...printerToEdit, name: e.target.value })}
+              />
+              <input
+                placeholder="IP"
+                className="w-full bg-slate-50 p-4 rounded-xl font-mono font-bold outline-none border-2 border-transparent focus:border-blue-500"
+                value={printerToEdit.ip}
+                onChange={e => setPrinterToEdit({ ...printerToEdit, ip: e.target.value })}
+              />
+              <input
+                placeholder="Modelo"
+                className="w-full bg-slate-50 p-4 rounded-xl font-bold outline-none border-2 border-transparent focus:border-blue-500"
+                value={printerToEdit.model}
+                onChange={e => setPrinterToEdit({ ...printerToEdit, model: e.target.value })}
+              />
+              <button
+                onClick={() => {
+                  if (printerToEdit.name && printerToEdit.ip) {
+                    setPrinters(curr => curr.map(p => p.id === printerToEdit.id ? printerToEdit : p));
+                    setPrinterToEdit(null);
+                  }
+                }}
+                className="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+              >
+                Salvar Alterações
+              </button>
+              <button
+                onClick={() => setPrinterToEdit(null)}
+                className="w-full text-slate-400 font-bold uppercase text-[10px] tracking-widest"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
