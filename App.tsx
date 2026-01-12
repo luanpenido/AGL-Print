@@ -326,19 +326,23 @@ const App: React.FC = () => {
         {activeTab === 'current' ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm text-center flex flex-col justify-center">
                 <p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Franquia</p>
-                <input type="number" className="text-2xl font-black w-full outline-none text-slate-900 bg-transparent" value={config.franquia} onChange={e => setConfig({ ...config, franquia: Number(e.target.value) })} />
+                <input type="number" className="text-2xl font-black w-full outline-none text-slate-900 bg-transparent text-center" value={config.franquia} onChange={e => setConfig({ ...config, franquia: Number(e.target.value) })} />
               </div>
-              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm text-center flex flex-col justify-center">
                 <p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Valor Base (R$)</p>
-                <input type="number" className="text-2xl font-black w-full outline-none text-slate-900 bg-transparent" value={config.valorFranquia} onChange={e => setConfig({ ...config, valorFranquia: Number(e.target.value) })} />
+                <input type="number" className="text-2xl font-black w-full outline-none text-slate-900 bg-transparent text-center" value={config.valorFranquia} onChange={e => setConfig({ ...config, valorFranquia: Number(e.target.value) })} />
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <p className="text-[9px] font-bold text-slate-300 uppercase mb-1">Valor Excedente (R$)</p>
+                  <input type="number" step="0.01" className="text-sm font-bold w-full outline-none text-slate-500 bg-transparent text-center" value={config.valorExtra} onChange={e => setConfig({ ...config, valorExtra: Number(e.target.value) })} />
+                </div>
               </div>
-              <div className="bg-blue-600 p-6 rounded-3xl shadow-xl text-white">
+              <div className="bg-blue-600 p-6 rounded-3xl shadow-xl text-white text-center flex flex-col justify-center">
                 <p className="text-[11px] font-bold text-blue-100 uppercase mb-1">Volume Total</p>
                 <div className="text-3xl font-black">{totals.totalCopias.toLocaleString()}</div>
               </div>
-              <div className="bg-slate-900 p-6 rounded-3xl shadow-xl text-white">
+              <div className="bg-slate-900 p-6 rounded-3xl shadow-xl text-white text-center flex flex-col justify-center">
                 <p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Total à Pagar</p>
                 <div className="text-3xl font-black text-emerald-400">R$ {totals.totalPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
               </div>
