@@ -1,0 +1,5 @@
+{
+  "name": "Controle de Impressões AGL",
+  "description": "Sistema premium para gestão de contadores de impressoras da rede AGL, com cálculo de excedentes e geração de relatórios de fechamento.",
+  "requestFramePermissions": []
+}
