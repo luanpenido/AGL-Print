@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const [viewingHistoryRecord, setViewingHistoryRecord] = useState<HistoryRecord | null>(null);
   const [printerToDelete, setPrinterToDelete] = useState<string | null>(null);
   const [printerToEdit, setPrinterToEdit] = useState<Printer | null>(null);
+  const [pendingCloseData, setPendingCloseData] = useState<{ period: string, record: HistoryRecord } | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [activeTab, setActiveTab] = useState<'current' | 'history'>('current');
 
@@ -174,14 +175,41 @@ const App: React.FC = () => {
       config: { ...config },
       totals: { ...totals }
     };
-    setHistory(prev => [newRecord, ...prev]);
+
+    // Check if a record already exists for this period
+    const existingRecord = history.find(h => h.period === period);
+
+    if (existingRecord) {
+      // Store pending data and show confirmation
+      setPendingCloseData({ period, record: newRecord });
+      setModalMode(null);
+    } else {
+      // No existing record, proceed normally
+      setHistory(prev => [newRecord, ...prev]);
+      setPrinters(prev => prev.map(p => ({
+        ...p,
+        lastMonthCounter: p.currentCounter || p.lastMonthCounter,
+        currentCounter: 0
+      })));
+      setModalMode(null);
+      alert(`Mês ${period} fechado! Arquivo de histórico atualizado na pasta.`);
+    }
+  };
+
+  const confirmOverwrite = () => {
+    if (!pendingCloseData) return;
+
+    const { period, record } = pendingCloseData;
+
+    // Remove existing record and add new one
+    setHistory(prev => [record, ...prev.filter(h => h.period !== period)]);
     setPrinters(prev => prev.map(p => ({
       ...p,
       lastMonthCounter: p.currentCounter || p.lastMonthCounter,
       currentCounter: 0
     })));
-    setModalMode(null);
-    alert(`Mês ${period} fechado! Arquivo de histórico atualizado na pasta.`);
+    setPendingCloseData(null);
+    alert(`Mês ${period} fechado! Registro anterior foi sobrescrito.`);
   };
 
   const handleDownloadPDF = async () => {
@@ -191,13 +219,19 @@ const App: React.FC = () => {
       setIsGeneratingPdf(false);
       return;
     }
+
     const opt = {
       margin: 0,
       filename: `fechamento_agl_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#FFFFFF'
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
+
     try {
       await (window as any).html2pdf().set(opt).from(element).save();
     } catch (e) {
@@ -211,11 +245,14 @@ const App: React.FC = () => {
     <div id="report-view" className="min-h-screen bg-slate-800 py-10 flex flex-col items-center overflow-y-auto">
       <style>{`
         @page { size: A4; margin: 0; }
-        .a4-page { width: 210mm; min-height: 297mm; padding: 12mm 15mm; margin: 0 auto; background: white; box-shadow: 0 20px 50px rgba(0,0,0,0.3); box-sizing: border-box; display: flex; flex-direction: column; }
+        .a4-page { width: 210mm; height: 297mm; padding: 8mm 12mm; margin: 0 auto; background: white; box-shadow: 0 20px 50px rgba(0,0,0,0.3); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+        .a4-page > * { margin: 0; }
         @media print {
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
           #report-view { background: white !important; padding: 0 !important; }
           .print-hide { display: none !important; }
-          .a4-page { box-shadow: none !important; margin: 0 !important; }
+          .a4-page { box-shadow: none !important; margin: 0 !important; padding: 8mm 12mm; height: 297mm; overflow: hidden; page-break-after: avoid; page-break-inside: avoid; }
+          body { margin: 0; padding: 0; }
         }
       `}</style>
       <div className="w-[210mm] mb-6 flex justify-between items-center text-white/70 px-4 print-hide">
@@ -241,31 +278,31 @@ const App: React.FC = () => {
           <table className="w-full text-[10px] border-collapse">
             <thead>
               <tr className="bg-slate-900 text-white">
-                <th className="py-2 px-3 text-left font-black uppercase text-[8px]">Equipamento</th>
-                <th className="py-2 px-3 text-center font-black uppercase text-[8px]">IP Rede</th>
-                <th className="py-2 px-3 text-center font-black uppercase text-[8px]">Anterior</th>
-                <th className="py-2 px-3 text-center font-black uppercase text-[8px]">Atual</th>
-                <th className="py-2 px-3 text-right font-black uppercase text-[8px]">Produção</th>
+                <th className="py-2 px-3 text-left font-black uppercase text-[9px]">Equipamento</th>
+                <th className="py-2 px-3 text-center font-black uppercase text-[9px]">IP Rede</th>
+                <th className="py-2 px-3 text-center font-black uppercase text-[9px]">Anterior</th>
+                <th className="py-2 px-3 text-center font-black uppercase text-[9px]">Atual</th>
+                <th className="py-2 px-3 text-right font-black uppercase text-[9px]">Produção</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 border-x border-slate-50">
               {dataPrinters.map(p => (
                 <tr key={p.id}>
-                  <td className="py-1.5 px-3">
-                    <p className="font-black text-slate-800 uppercase text-[9px]">{p.name}</p>
-                    <p className="text-[7px] text-slate-400 font-bold">{p.model}</p>
+                  <td className="py-1 px-3">
+                    <p className="font-black text-slate-800 uppercase text-[10px]">{p.name}</p>
+                    <p className="text-[8px] text-slate-400 font-bold">{p.model}</p>
                   </td>
-                  <td className="py-1.5 px-3 text-center font-mono text-[8px]">{p.ip}</td>
-                  <td className="py-1.5 px-3 text-center text-slate-400">{p.lastMonthCounter.toLocaleString()}</td>
-                  <td className="py-1.5 px-3 text-center text-slate-900 font-bold">{p.currentCounter.toLocaleString()}</td>
-                  <td className="py-1.5 px-3 text-right font-black text-blue-600">{(p.currentCounter - p.lastMonthCounter).toLocaleString()}</td>
+                  <td className="py-1 px-3 text-center font-mono text-[9px]">{p.ip}</td>
+                  <td className="py-1 px-3 text-center text-slate-400 text-[10px]">{p.lastMonthCounter.toLocaleString()}</td>
+                  <td className="py-1 px-3 text-center text-slate-900 font-bold text-[10px]">{p.currentCounter.toLocaleString()}</td>
+                  <td className="py-1 px-3 text-right font-black text-blue-600 text-[10px]">{(p.currentCounter - p.lastMonthCounter).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="mt-6">
-          <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="mt-4">
+          <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="bg-slate-50 border rounded-xl p-4">
               <h3 className="text-[8px] font-black uppercase text-slate-400 mb-2 border-b pb-1">Apuração</h3>
               <div className="space-y-1">
@@ -533,6 +570,20 @@ const App: React.FC = () => {
             <div className="flex gap-3 mt-6">
               <button onClick={() => setPrinterToDelete(null)} className="flex-1 py-3 bg-slate-100 rounded-xl font-bold text-xs uppercase tracking-widest">Não</button>
               <button onClick={confirmDelete} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all">Remover</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingCloseData && (
+        <div className="fixed inset-0 z-[70] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center">
+            <div className="bg-amber-50 text-amber-500 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><AlertTriangle size={32} /></div>
+            <h3 className="text-lg font-black text-slate-900 mb-2">Sobrescrever fechamento?</h3>
+            <p className="text-slate-600 text-sm mb-4">Já existe um fechamento para <strong>{pendingCloseData.period}</strong>. Deseja sobrescrever?</p>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setPendingCloseData(null)} className="flex-1 py-3 bg-slate-100 rounded-xl font-bold text-xs uppercase tracking-widest">Cancelar</button>
+              <button onClick={confirmOverwrite} className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all">Sobrescrever</button>
             </div>
           </div>
         </div>
